@@ -1,11 +1,6 @@
-/* globals */
-
 var window = window;
 var canvas = window.document.getElementById('CVS');
 var context = canvas.getContext('2d');
-
-
-/* lib */
 
 var game =
 {
@@ -17,6 +12,7 @@ var game =
 			{
 				color: color,
 				radius: radius,
+				speed: 1,
 				x: x,
 				y: y
 			};
@@ -51,8 +47,8 @@ var game =
 			if(game.event.mousedown.is)
 			{
 				context.strokeStyle = '#ccc';
-				context.lineTo(game.event.mousemove.x, game.event.mousemove.y);
-				context.stroke();
+				context.fillRect(game.event.mousemove.x, game.event.mousemove.y, 100, 100);
+				context.fill();
 			}
 			else
 			{
@@ -62,13 +58,15 @@ var game =
 
 		snows: function(context, snows)
 		{
-			for(var snow in snows)
+			for(var i = 0; i < snows.length; i++)
 			{
-				context.fillStyle = snow.color;
+				context.fillStyle = snows[i].color;
+				context.strokeStyle = snows[i].color;
 				context.beginPath();
-				context.arc(snow.x, snow.y, snow.radius, 0, 2);
+				context.arc(snows[i].x, snows[i].y, snows[i].radius, 0, 2 * Math.PI);
 				context.closePath();
 				context.fill();
+				context.stroke();
 			}
 		}
 	},
@@ -107,9 +105,34 @@ var game =
 		}
 	},
 
+	options:
+	{
+		gravity: 0.5,
+		snow:
+		{
+			number: 100,
+			radius: 8
+		}
+	},
+
 	update:
 	{
-		interval: 300,
+		interval: 15,
+
+		physic:
+		{
+			gravity: function(object, canvas)
+			{
+				object.y += object.speed;
+				object.speed = object.radius + game.options.gravity*object.speed; //* game.options.gravity;
+
+				if(object.y > canvas.height)
+				{
+					object.y = 0;
+					object.speed = 0;
+				};
+			}
+		},
 
 		point:
 		{
@@ -124,9 +147,6 @@ var game =
 		}
 	}
 };
-
-
-/* events */
 
 window.onload = function()
 {
@@ -172,17 +192,28 @@ window.onresize = function()
 	game.draw.canvas.resize(canvas, window);
 };
 
-/* time event */
 setInterval(
 	function()
 	{
-		var x = 100;
-		var y = 14;
-		var radius = Math.random() * 10;
-		var color = '#324566';
-		game.create.snow(x, y, radius, color);
+//create
+		if(game.data.snows.length < game.options.snow.number)
+		{
+			var x = Math.floor(Math.random() * canvas.width);
+			var y = Math.floor(Math.random() * canvas.height);
+			var radius = Math.floor(Math.random() * game.options.snow.radius);
+			var color = '#ccddee';
+			game.create.snow(x, y, radius, color);
+		};
 
-		game.draw.snows(game.data.snows);
+//update
+		for(var i = 0; i < game.data.snows.length; i++)
+		{
+			game.update.physic.gravity(game.data.snows[i], canvas);
+		};
+
+//draw
+		game.draw.canvas.clear(canvas, context);
+		game.draw.snows(context, game.data.snows);
 	},
 	game.update.interval
 );
