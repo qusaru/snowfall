@@ -58,16 +58,14 @@ var game =
 
 		snows: function(context, snows)
 		{
+			context.beginPath();
 			for(var i = 0; i < snows.length; i++)
 			{
 				context.fillStyle = snows[i].color;
-				context.strokeStyle = snows[i].color;
-				context.beginPath();
 				context.arc(snows[i].x, snows[i].y, snows[i].radius, 0, 2 * Math.PI);
 				context.closePath();
-				context.fill();
-				context.stroke();
-			}
+			};
+			context.fill();
 		}
 	},
 
@@ -111,13 +109,13 @@ var game =
 		snow:
 		{
 			number: 100,
-			radius: 8
+			radius: 7
 		}
 	},
 
 	update:
 	{
-		interval: 15,
+		interval: 40,
 
 		physic:
 		{
@@ -128,8 +126,10 @@ var game =
 
 				if(object.y > canvas.height)
 				{
-					object.y = 0;
+					object.radius = Math.floor(Math.random() * Math.random() * game.options.snow.radius + 1);
 					object.speed = 0;
+					object.x = Math.floor(Math.random() * canvas.width);
+					object.y = 0;
 				};
 			}
 		},
@@ -192,6 +192,7 @@ window.onresize = function()
 	game.draw.canvas.resize(canvas, window);
 };
 
+/*
 setInterval(
 	function()
 	{
@@ -200,7 +201,7 @@ setInterval(
 		{
 			var x = Math.floor(Math.random() * canvas.width);
 			var y = Math.floor(Math.random() * canvas.height);
-			var radius = Math.floor(Math.random() * game.options.snow.radius);
+			var radius = Math.floor(Math.random() * Math.random() * game.options.snow.radius + 1);
 			var color = '#ccddee';
 			game.create.snow(x, y, radius, color);
 		};
@@ -217,3 +218,33 @@ setInterval(
 	},
 	game.update.interval
 );
+*/
+
+var refresh = true;
+
+function cycle()
+{
+//create
+	if(game.data.snows.length < game.options.snow.number)
+	{
+		var x = Math.floor(Math.random() * canvas.width);
+		var y = Math.floor(Math.random() * canvas.height);
+		var radius = Math.floor(Math.random() * Math.random() * game.options.snow.radius + 1);
+		var color = '#ccddee';
+		game.create.snow(x, y, radius, color);
+	};
+
+//update
+	for(var i = 0; i < game.data.snows.length; i++)
+	{
+		game.update.physic.gravity(game.data.snows[i], canvas);
+	};
+
+//draw
+	game.draw.canvas.clear(canvas, context);
+	game.draw.snows(context, game.data.snows);
+
+	window.requestAnimationFrame(cycle, canvas);
+};
+
+cycle();
